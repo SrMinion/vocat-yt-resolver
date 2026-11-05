@@ -76,6 +76,11 @@ class H(BaseHTTPRequestHandler):
             if not ID_RE.match(vid):
                 return self._json(400, {"ok": False, "error": "bad_id"})
             return self.resolve(vid)
+        if u.path == "/search":
+            term = q.get("q", [""])[0].strip()
+            if len(term) < 2 or len(term) > 160:
+                return self._json(400, {"ok": False, "error": "bad_query"})
+            return self.search(term)
         m = re.match(r"^/yt/([A-Za-z0-9_-]{11})\.aac$", u.path)
         if m:
             return self.stream(m.group(1))
@@ -93,6 +98,26 @@ class H(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, "format": out[-1]})
         err = (r.stderr or "erro").strip().splitlines()
         return self._json(502, {"ok": False, "error": (err[-1] if err else "erro")[:200]})
+    def search(self, term):
+        try:
+            r = subprocess.run(
+                ytdlp_base() + ["--flat-playlist", "--dump-single-json", f"ytsearch5:{term}"],
+                capture_output=True, text=True, timeout=40)
+        except subprocess.TimeoutExpired:
+            return self._json(504, {"ok": False, "error": "timeout"})
+        if r.returncode != 0:
+            err = (r.stderr or "erro").strip().splitlines()
+            return self._json(502, {"ok": False, "error": (err[-1] if err else "erro")[:200]})
+        try:
+            data = json.loads(r.stdout)
+            entries = data.get("entries") or []
+            items = [{"id": x.get("id"), "title": x.get("title"),
+                      "channel": x.get("channel") or x.get("uploader"),
+                      "duration": x.get("duration")}
+                     for x in entries if ID_RE.match(x.get("id", ""))]
+            return self._json(200, {"ok": True, "query": term, "items": items})
+        except (json.JSONDecodeError, AttributeError, TypeError):
+            return self._json(502, {"ok": False, "error": "invalid_search_response"})
     def stream(self, vid):
         if not _sem.acquire(blocking=False):
             return self._json(503, {"ok": False, "error": "busy"})
