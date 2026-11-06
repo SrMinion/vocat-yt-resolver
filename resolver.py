@@ -12,6 +12,7 @@ PORT = int(os.environ.get("PORT", "8787"))
 YTDLP = os.environ.get("YTDLP", "/usr/local/bin/yt-dlp")
 FFMPEG = os.environ.get("FFMPEG", "ffmpeg")
 COOKIES = os.environ.get("YT_COOKIES", "")
+PROXY = os.environ.get("YT_PROXY", "").strip()
 MAX_STREAMS = int(os.environ.get("MAX_STREAMS", "1"))
 START_TIMEOUT = float(os.environ.get("START_TIMEOUT", "15"))
 MAX_SECONDS = int(os.environ.get("MAX_SECONDS", "0"))
@@ -22,6 +23,8 @@ _sem = threading.BoundedSemaphore(MAX_STREAMS)
 
 def ytdlp_base():
     cmd = [YTDLP, "--no-warnings", "--no-playlist", "--js-runtimes", "node"]
+    if PROXY:
+        cmd += ["--proxy", PROXY]
     if COOKIES and os.path.exists(COOKIES):
         cmd += ["--cookies", COOKIES]
     return cmd
