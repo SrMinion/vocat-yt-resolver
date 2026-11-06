@@ -68,7 +68,8 @@ class H(BaseHTTPRequestHandler):
         u = urlparse(self.path)
         q = parse_qs(u.query)
         if u.path == "/health":
-            return self._json(200, {"ok": True, "service": "vocat-yt-resolver"})
+            return self._json(200, {"ok": True, "service": "vocat-yt-resolver",
+                                    "cookies_configured": bool(COOKIES and os.path.isfile(COOKIES))})
         if not self._authed():
             return self._json(401, {"ok": False, "error": "unauthorized"})
         if u.path == "/resolve":
