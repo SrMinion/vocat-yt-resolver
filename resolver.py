@@ -21,7 +21,7 @@ FMT_ANY = "bestaudio/best"
 _sem = threading.BoundedSemaphore(MAX_STREAMS)
 
 def ytdlp_base():
-    cmd = [YTDLP, "--no-warnings", "--no-playlist"]
+    cmd = [YTDLP, "--no-warnings", "--no-playlist", "--js-runtimes", "node"]
     if COOKIES and os.path.exists(COOKIES):
         cmd += ["--cookies", COOKIES]
     return cmd

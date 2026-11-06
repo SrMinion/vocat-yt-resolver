@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ffmpeg curl ca-certificates \
+ && apt-get install -y --no-install-recommends ffmpeg curl ca-certificates nodejs \
  && curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
  && chmod 0755 /usr/local/bin/yt-dlp \
  && rm -rf /var/lib/apt/lists/*
